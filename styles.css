@@ -25,11 +25,13 @@
 
 html {
   background: var(--bg);
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  width: 100%;
   overflow-x: hidden;
   background:
     radial-gradient(circle at 18% 4%, rgba(255, 255, 255, 0.9), transparent 300px),
@@ -1237,13 +1239,19 @@ tbody tr:hover {
 }
 
 @media (max-width: 720px) {
+  * {
+    max-width: 100%;
+  }
+
   body {
     background: var(--bg);
   }
 
   .app-shell {
     display: block;
+    width: 100vw;
     padding: 0;
+    overflow-x: hidden;
   }
 
   .icon-rail {
@@ -1251,23 +1259,27 @@ tbody tr:hover {
   }
 
   .main-stage {
+    width: 100vw;
     min-height: 100vh;
     border: 0;
     border-radius: 0;
     background: transparent;
     box-shadow: none;
+    overflow: visible;
   }
 
   .layout,
   .topbar {
-    padding-left: 14px;
-    padding-right: 14px;
+    width: calc(100vw - 48px);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .layout {
-    width: auto;
-    margin: 0 14px;
-    padding: 24px 0 52px;
+    padding: 22px 0 52px;
+    overflow: visible;
   }
 
   .topbar,
@@ -1277,7 +1289,25 @@ tbody tr:hover {
   }
 
   .topbar {
-    padding-top: 28px;
+    padding-top: 24px;
+    gap: 16px;
+    overflow: hidden;
+  }
+
+  h1 {
+    font-size: clamp(30px, 8.8vw, 36px);
+    line-height: 1.08;
+  }
+
+  .top-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .primary-button {
+    width: 100%;
+    justify-content: center;
   }
 
   .top-actions {
@@ -1295,6 +1325,42 @@ tbody tr:hover {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .toolbar {
+    gap: 12px;
+    margin: 18px 0;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    padding: 2px 0 8px;
+    overflow: visible;
+  }
+
+  .tab {
+    min-height: 38px;
+    padding: 0 10px;
+  }
+
+  .search {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .metric,
+  .goal-card,
+  .panel,
+  .task-column,
+  .space-group,
+  .focus-item {
+    border-radius: 22px;
+  }
+
+  .metric {
+    padding: 20px;
+  }
+
   .goal-card p {
     min-height: 0;
   }
@@ -1304,6 +1370,7 @@ tbody tr:hover {
   }
 
   .editor {
+    width: 100%;
     padding: 18px 14px;
   }
 
@@ -1329,5 +1396,66 @@ tbody tr:hover {
 
   .step-row .delete-step {
     width: 100%;
+  }
+
+  .table-wrap {
+    overflow: visible;
+  }
+
+  table,
+  thead,
+  tbody,
+  tr,
+  th,
+  td {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  tbody tr {
+    padding: 12px;
+    border-radius: 18px;
+    background: #eeeeee;
+    box-shadow: var(--inset);
+  }
+
+  td {
+    padding: 5px 0;
+    border-bottom: 0;
+  }
+
+  td:nth-child(1) {
+    color: #222529;
+    font-weight: 900;
+  }
+
+  td:nth-child(2)::before {
+    content: "所属目标：";
+    color: var(--muted);
+  }
+
+  td:nth-child(3)::before {
+    content: "优先级：";
+    color: var(--muted);
+  }
+
+  td:nth-child(4)::before {
+    content: "状态：";
+    color: var(--muted);
+  }
+
+  td:nth-child(5)::before {
+    content: "下一步：";
+    color: var(--muted);
   }
 }
