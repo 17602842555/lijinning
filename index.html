@@ -75,6 +75,7 @@
         <button class="icon-button" id="resetBtn" title="恢复初始数据" aria-label="恢复初始数据">
           <span>↺</span>
         </button>
+        <button class="secondary-button" id="addGoalBtn">新增大模块</button>
         <button class="primary-button" id="exportBtn">导出数据</button>
       </div>
     </header>
@@ -118,6 +119,29 @@
       </section>
 
       <section class="goals" id="goalGrid" aria-label="目标进度"></section>
+
+      <section class="agent-panel panel" id="weeklyAgent">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">AI Agent</p>
+            <h2>AI周报智能体</h2>
+          </div>
+          <div class="agent-actions">
+            <button type="button" class="secondary-button compact" id="generateWeeklyBtn">生成周报</button>
+            <button type="button" class="primary-button compact" id="applyWeeklyPlanBtn">套用到下周安排</button>
+          </div>
+        </div>
+        <div class="agent-grid">
+          <article>
+            <strong>本周总结</strong>
+            <div class="agent-output" id="weeklySummaryOutput">点击“生成周报”，AI 会按当前大模块、拆分环节和风险自动总结。</div>
+          </article>
+          <article>
+            <strong>下周规划</strong>
+            <div class="agent-output" id="weeklyPlanOutput">生成后可一键套用到“下周安排”。</div>
+          </article>
+        </div>
+      </section>
 
       <section class="panel" id="nextWeek">
         <div class="panel-header">

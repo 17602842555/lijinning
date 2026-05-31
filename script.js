@@ -455,6 +455,10 @@ const nextWeekBoard = document.querySelector("#nextWeekBoard");
 const searchInput = document.querySelector("#searchInput");
 const modal = document.querySelector("#editModal");
 const form = document.querySelector("#editorForm");
+const generateWeeklyBtn = document.querySelector("#generateWeeklyBtn");
+const applyWeeklyPlanBtn = document.querySelector("#applyWeeklyPlanBtn");
+const weeklySummaryOutput = document.querySelector("#weeklySummaryOutput");
+const weeklyPlanOutput = document.querySelector("#weeklyPlanOutput");
 
 const fields = {
   type: document.querySelector("#editorType"),
@@ -481,6 +485,7 @@ const fields = {
 };
 
 let latestAiSuggestion = null;
+let latestWeeklyAgent = null;
 
 function defaultStepsFor(name, progress = 0, context = "") {
   const done = progress >= 100 ? 100 : 0;
@@ -996,6 +1001,16 @@ function statusPill(status) {
   return `<span class="status-pill ${statusClass[status] || ""}">${status}</span>`;
 }
 
+function formatDateOffset(offset) {
+  const date = new Date();
+  date.setDate(date.getDate() + offset);
+  return `${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function statusRank(status) {
+  return { "进行中": 0, "待确认": 1, "待验收": 2, "待启动": 3, "已完成": 4 }[status] ?? 5;
+}
+
 function renderMetrics() {
   const avg = Math.round(data.goals.reduce((sum, goal) => sum + goal.progress, 0) / data.goals.length);
   const doing = data.goals.filter((goal) => goal.status === "进行中").length;
@@ -1012,6 +1027,64 @@ function renderMetrics() {
   document.querySelector("#sideDoing").textContent = doing;
   document.querySelector("#sidePending").textContent = pending;
   document.querySelector("#sideDone").textContent = done;
+}
+
+function generateWeeklyAgentReport() {
+  const goals = [...data.goals].sort((a, b) => statusRank(a.status) - statusRank(b.status) || a.progress - b.progress);
+  const activeGoals = goals.filter((goal) => goal.status !== "已完成");
+  const doneGoals = goals.filter((goal) => goal.status === "已完成");
+  const blockedSteps = data.goals
+    .flatMap((goal) => (goal.steps || []).map((step) => ({ ...step, goal: goal.name, owner: goal.owner })))
+    .filter((step) => step.progress < 40 || step.status === "待启动")
+    .slice(0, 8);
+  const priorityGoals = activeGoals.slice(0, 7);
+  const avg = Math.round(data.goals.reduce((sum, goal) => sum + goal.progress, 0) / data.goals.length);
+  const summaryLines = [
+    `本周共有 ${data.goals.length} 个大模块，平均进度 ${avg}%。进行中 ${data.goals.filter((goal) => goal.status === "进行中").length} 个，待启动 ${data.goals.filter((goal) => goal.status === "待启动").length} 个，已完成 ${doneGoals.length} 个。`,
+    `重点推进：${activeGoals.slice(0, 4).map((goal) => `${goal.name}（${goal.progress}%）`).join("、") || "暂无进行中模块"}。`,
+    `主要卡点：${blockedSteps.length ? blockedSteps.map((step) => `${step.goal}-${step.name}`).join("、") : "暂无明显低进度环节"}。`,
+    "建议节奏：先处理影响交付时间的大模块，再补齐负责人、截止时间、图片资料和验收标准。"
+  ];
+  const weekDays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+  const planned = weekDays.map((day, index) => {
+    const goal = priorityGoals[index] || priorityGoals[priorityGoals.length - 1] || data.goals[0];
+    const lowStep = (goal.steps || []).find((step) => step.progress < 60) || (goal.steps || [])[0];
+    const title = index < priorityGoals.length ? goal.name : index === 5 ? "周报与风险清单" : "下周预排与资料备份";
+    const owner = index < priorityGoals.length ? goal.owner || "JNN" : "JNN";
+    const focus =
+      index < priorityGoals.length
+        ? `围绕「${goal.name}」推进：${goal.summary}`
+        : index === 5
+          ? "汇总本周完成事项、延误事项、风险事项和需要老板决策的问题。"
+          : "整理下周会议、项目节点、数据备份和待补资料。";
+    const next =
+      index < priorityGoals.length
+        ? `优先处理 ${lowStep ? `「${lowStep.name}」` : "低进度环节"}，并明确负责人、截止时间和验收标准。`
+        : index === 5
+          ? "输出一页周报和风险清单。"
+          : "提前准备周一目标会所需材料。";
+    return {
+      day,
+      date: formatDateOffset(index + 1),
+      title,
+      owner,
+      status: index < 5 ? (goal.status === "已完成" ? "待确认" : goal.status) : "待启动",
+      focus,
+      next
+    };
+  });
+  const planLines = planned.map((plan) => `${plan.day} ${plan.date}｜${plan.title}｜${plan.owner}｜${plan.next}`);
+
+  return {
+    summary: summaryLines.join("\n"),
+    plan: planLines.join("\n"),
+    plans: planned
+  };
+}
+
+function renderWeeklyAgent() {
+  weeklySummaryOutput.textContent = data.weeklyAgent?.summary || "点击“生成周报”，AI 会按当前大模块、拆分环节和风险自动总结。";
+  weeklyPlanOutput.textContent = data.weeklyAgent?.plan || "生成后可一键套用到“下周安排”。";
 }
 
 function renderNextWeek() {
@@ -1248,6 +1321,7 @@ function renderAll() {
   keyword = normalize(searchInput.value.trim());
   renderMetrics();
   renderGoals();
+  renderWeeklyAgent();
   renderNextWeek();
   renderPages();
   renderTasks();
@@ -1764,6 +1838,34 @@ function closeEditor() {
   currentAttachments = [];
 }
 
+function nextGoalId() {
+  const max = data.goals.reduce((highest, goal) => {
+    const match = String(goal.id || "").match(/G(\d+)/i);
+    return match ? Math.max(highest, Number(match[1])) : highest;
+  }, 0);
+  return `G${String(max + 1).padStart(2, "0")}`;
+}
+
+function addGoalModule() {
+  const id = nextGoalId();
+  const goal = {
+    id,
+    name: "新大模块",
+    progress: 0,
+    status: "待启动",
+    owner: "负责人",
+    due: "待排期",
+    summary: "补充这个模块要解决的问题、当前状态和交付目标。",
+    next: "补齐负责人、截止时间、关键环节和验收标准。",
+    steps: normalizeSteps([], "新大模块", 0, "goal"),
+    attachments: []
+  };
+  data.goals.push(goal);
+  saveData();
+  renderAll();
+  openEditor("goal", data.goals.length - 1);
+}
+
 function applyEditor(event) {
   event.preventDefault();
   if (!editing) return;
@@ -1927,6 +2029,28 @@ fields.imageList.addEventListener("click", (event) => {
   if (!deleteButton) return;
   currentAttachments.splice(Number(deleteButton.dataset.imageIndex), 1);
   renderAttachmentEditor();
+});
+document.querySelector("#addGoalBtn").addEventListener("click", addGoalModule);
+generateWeeklyBtn.addEventListener("click", () => {
+  latestWeeklyAgent = generateWeeklyAgentReport();
+  data.weeklyAgent = {
+    summary: latestWeeklyAgent.summary,
+    plan: latestWeeklyAgent.plan,
+    generatedAt: new Date().toLocaleString("zh-CN")
+  };
+  renderWeeklyAgent();
+  saveData();
+});
+applyWeeklyPlanBtn.addEventListener("click", () => {
+  latestWeeklyAgent ||= generateWeeklyAgentReport();
+  data.nextWeekPlans = structuredClone(latestWeeklyAgent.plans);
+  data.weeklyAgent = {
+    summary: latestWeeklyAgent.summary,
+    plan: latestWeeklyAgent.plan,
+    generatedAt: new Date().toLocaleString("zh-CN")
+  };
+  renderAll();
+  scrollToSection("nextWeek");
 });
 fields.stepList.addEventListener("input", (event) => {
   const row = event.target.closest(".step-row");
