@@ -115,6 +115,71 @@ const seedData = {
     { name: "直播复盘行动清单页", goal: "刘老师直播复盘跟进", priority: "P0", status: "待启动", next: "按责任人、截止时间、验证指标跟进每条优化动作。" },
     { name: "直播周复盘汇总页", goal: "刘老师直播复盘跟进", priority: "P1", status: "待启动", next: "每周汇总趋势、共性问题、有效动作和下周重点。" }
   ],
+  nextWeekPlans: [
+    {
+      day: "周一",
+      date: "06/08",
+      title: "周目标校准",
+      owner: "JNN / 总助",
+      status: "待启动",
+      focus: "确认本周所有大模块优先级、负责人、截止时间和必须交付结果。",
+      next: "上午完成目标排期，下午同步给相关负责人。"
+    },
+    {
+      day: "周二",
+      date: "06/09",
+      title: "集团 OS 进度跟进",
+      owner: "技术 / 总助",
+      status: "进行中",
+      focus: "重点看财务模块、审批流、任务模块和知识库模块的开发进度。",
+      next: "输出剩余模块卡点清单和 2026-06-28 交付倒排。"
+    },
+    {
+      day: "周三",
+      date: "06/10",
+      title: "人工成本降本复盘",
+      owner: "人事 / 财务",
+      status: "待确认",
+      focus: "复核薪资表、部门成本、岗位成本、低效流程和自动化替代空间。",
+      next: "形成部门级降本动作，不做单一维度裁员判断。"
+    },
+    {
+      day: "周四",
+      date: "06/11",
+      title: "别墅与 12 楼空间资料整理",
+      owner: "行政 / 项目负责人",
+      status: "待启动",
+      focus: "补齐空间图片、现场图、平面图、车位图和当前进度说明。",
+      next: "把图片上传到对应模块，并整理验收/施工/采购下一步。"
+    },
+    {
+      day: "周五",
+      date: "06/12",
+      title: "刘老师直播复盘跟进",
+      owner: "直播运营 / 数据",
+      status: "进行中",
+      focus: "跟进每日 GMV、GSV、退货率、转化率和复盘动作验证。",
+      next: "沉淀大场 SOP、高退货原因和下周直播优化动作。"
+    },
+    {
+      day: "周六",
+      date: "06/13",
+      title: "周报与风险清单",
+      owner: "JNN",
+      status: "待启动",
+      focus: "汇总本周完成事项、延误事项、风险事项和需要老板决策的问题。",
+      next: "输出一页周报和下周重点事项。"
+    },
+    {
+      day: "周日",
+      date: "06/14",
+      title: "下周预排与资料备份",
+      owner: "JNN",
+      status: "待启动",
+      focus: "整理下周会议、项目节点、数据备份和待补资料。",
+      next: "提前准备周一目标会所需材料。"
+    }
+  ],
   tasks: [
     { name: "品牌模块", desc: "品牌档案、品牌定位、视觉资料、授权资料、品牌任务。", status: "已完成", group: "集团 OS", progress: 100, owner: "品牌负责人", due: "已完成", next: "确认维护责任人。" },
     { name: "店铺模块", desc: "门店档案、位置、负责人、经营指标、巡检记录。", status: "已完成", group: "集团 OS", progress: 100, owner: "运营负责人", due: "已完成", next: "补齐门店经营指标。" },
@@ -386,6 +451,7 @@ const goalGrid = document.querySelector("#goalGrid");
 const pageTable = document.querySelector("#pageTable");
 const taskBoard = document.querySelector("#taskBoard");
 const spaceGrid = document.querySelector("#spaceGrid");
+const nextWeekBoard = document.querySelector("#nextWeekBoard");
 const searchInput = document.querySelector("#searchInput");
 const modal = document.querySelector("#editModal");
 const form = document.querySelector("#editorForm");
@@ -717,6 +783,7 @@ function ensureData(input) {
   next.rosterSummary = structuredClone(seedData.rosterSummary);
   next.payrollSummary = structuredClone(seedData.payrollSummary);
   next.liveReviewSummary = structuredClone(seedData.liveReviewSummary);
+  next.nextWeekPlans = Array.isArray(input?.nextWeekPlans) ? input.nextWeekPlans : structuredClone(seedData.nextWeekPlans);
   const shouldImportPayroll = next._payrollImportedVersion !== seedData.payrollSummary.importVersion;
   const liveReviewVersion = seedData.liveReviewSummary.importVersion;
   const shouldImportLiveReview = next._liveReviewVersion !== liveReviewVersion;
@@ -767,6 +834,12 @@ function ensureData(input) {
   seedData.pages.forEach((seedPage) => {
     if (!next.pages.some((page) => page.name === seedPage.name)) {
       next.pages.push(structuredClone(seedPage));
+    }
+  });
+
+  seedData.nextWeekPlans.forEach((seedPlan) => {
+    if (!next.nextWeekPlans.some((plan) => plan.day === seedPlan.day && plan.title === seedPlan.title)) {
+      next.nextWeekPlans.push(structuredClone(seedPlan));
     }
   });
 
@@ -933,11 +1006,40 @@ function renderMetrics() {
   document.querySelector("#metricDoing").textContent = doing;
   document.querySelector("#metricPending").textContent = pending;
   document.querySelector("#sideGoalTotal").textContent = data.goals.length;
+  document.querySelector("#sideNextWeekTotal").textContent = data.nextWeekPlans.length;
   document.querySelector("#sidePageTotal").textContent = data.pages.length;
   document.querySelector("#sideTaskTotal").textContent = data.tasks.reduce((sum, task) => sum + (task.steps?.length || 1), 0);
   document.querySelector("#sideDoing").textContent = doing;
   document.querySelector("#sidePending").textContent = pending;
   document.querySelector("#sideDone").textContent = done;
+}
+
+function renderNextWeek() {
+  const plans = data.nextWeekPlans
+    .map((plan, index) => ({ ...plan, index }))
+    .filter((plan) => matchKeyword([plan.day, plan.date, plan.title, plan.owner, plan.status, plan.focus, plan.next]));
+
+  document.querySelector("#nextWeekCount").textContent = `${plans.length} 项`;
+  nextWeekBoard.innerHTML = plans.length
+    ? plans
+        .map(
+          (plan) => `
+            <article class="week-card">
+              <div class="week-card-top">
+                <span class="week-date">${plan.day}<strong>${plan.date}</strong></span>
+                ${statusPill(plan.status)}
+              </div>
+              <h3>${plan.title}</h3>
+              <p>${plan.focus}</p>
+              <dl>
+                <dt>负责人</dt><dd>${plan.owner}</dd>
+                <dt>下一步</dt><dd>${plan.next}</dd>
+              </dl>
+            </article>
+          `
+        )
+        .join("")
+    : `<div class="empty">没有匹配的下周安排</div>`;
 }
 
 function renderGoalMedia(goal) {
@@ -1146,6 +1248,7 @@ function renderAll() {
   keyword = normalize(searchInput.value.trim());
   renderMetrics();
   renderGoals();
+  renderNextWeek();
   renderPages();
   renderTasks();
   renderSpaces();

@@ -794,6 +794,58 @@ tbody tr:hover {
   min-width: 0;
 }
 
+.week-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.week-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 22px;
+  background: #eeeeee;
+  box-shadow: 6px 8px 16px rgba(0, 0, 0, 0.12), -5px -5px 14px rgba(255, 255, 255, 0.78);
+}
+
+.week-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.week-date {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  min-width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: var(--screen);
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 900;
+  text-shadow: 0 0 10px rgba(98, 212, 220, 0.55);
+}
+
+.week-date strong {
+  color: #ffffff;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 16px;
+}
+
+.week-card h3 {
+  margin-bottom: 0;
+}
+
+.week-card p {
+  margin-bottom: 0;
+  color: #60656d;
+  line-height: 1.55;
+}
+
 .task-column {
   min-height: 220px;
   padding: 12px;
@@ -1225,6 +1277,7 @@ tbody tr:hover {
 
   .summary-grid,
   .goals,
+  .week-board,
   .task-board {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1316,6 +1369,7 @@ tbody tr:hover {
 
   .summary-grid,
   .goals,
+  .week-board,
   .task-board,
   .space-grid {
     grid-template-columns: 1fr;

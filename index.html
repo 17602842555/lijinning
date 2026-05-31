@@ -38,6 +38,7 @@
         <section class="nav-group">
           <p>Projects</p>
           <button class="nav-item is-active" data-nav-target="dashboard"><span>☷</span>驾驶舱<em id="sideGoalTotal">0</em></button>
+          <button class="nav-item" data-nav-target="nextWeek"><span>▦</span>下周安排<em id="sideNextWeekTotal">0</em></button>
           <button class="nav-item" data-nav-target="pages"><span>▤</span>网页清单<em id="sidePageTotal">0</em></button>
           <button class="nav-item" data-nav-target="tasks"><span>◫</span>目标拆解<em id="sideTaskTotal">0</em></button>
         </section>
@@ -117,6 +118,17 @@
       </section>
 
       <section class="goals" id="goalGrid" aria-label="目标进度"></section>
+
+      <section class="panel" id="nextWeek">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Next Week</p>
+            <h2>下周安排</h2>
+          </div>
+          <span class="count" id="nextWeekCount">0 项</span>
+        </div>
+        <div class="week-board" id="nextWeekBoard"></div>
+      </section>
 
       <section class="content-grid">
         <article class="panel wide" id="pages">
